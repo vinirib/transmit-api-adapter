@@ -1,0 +1,1118 @@
+openapi: 3.0.3
+info:
+  title: Users
+  description: Manage user profiles
+  version: ''
+servers:
+  - url: https://api.userid.security
+security: []
+paths:
+  /v1/users/bulk:
+    post:
+      operationId: bulkCreateUser
+      summary: Create users
+      description: Create multiple users
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/ApiCreateUserInput'
+      responses:
+        '201':
+          description: ''
+          content:
+            application/json:
+              schema:
+                title: ApiCreatedResponse-bulkCreateUser
+                type: object
+                required:
+                  - result
+                description: The users have been successfully created.
+                properties:
+                  result:
+                    $ref: '#/components/schemas/ApiBulkUsers'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequestHttpError'
+      security:
+        - bearer: []
+  /v1/users:
+    post:
+      operationId: createUser
+      summary: Create user
+      description: Add a user to Transmit. A user_id is returned as part of the User in the response that can then be used to perform other operations, such as get, update and delete. An email or a phone_number are required.
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApiCreateUserInput'
+      responses:
+        '201':
+          description: ''
+          content:
+            application/json:
+              schema:
+                title: ApiCreatedResponse-createUser
+                type: object
+                required:
+                  - result
+                description: The user has been successfully created.
+                properties:
+                  result:
+                    $ref: '#/components/schemas/ApiUser'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequestHttpError'
+        '409':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IdentifierIsTakenHttpError'
+      security:
+        - bearer: []
+    get:
+      operationId: getUsers
+      summary: Get users
+      description: Search across your users at Transmit. This endpoint also allows you to return all of your users by sending no filters at all
+      parameters:
+        - name: page_offset
+          required: false
+          in: query
+          description: Number of users you wish to skip before selecting users
+          schema:
+            type: number
+        - name: page_limit
+          required: false
+          in: query
+          description: Number of users to return in page
+          schema:
+            maximum: 10000
+            type: number
+        - name: search_prefix
+          required: false
+          in: query
+          description: Value to search for in the primary email and phone_number fields, where the search value must match the prefix of the field value. For example, "search_prefix=john" will return users whose email starts with "john" and "search_prefix=%2B1212" returns users whose phone number starts with "+1212".
+          example: joe
+          schema:
+            type: string
+        - name: sort_field
+          required: false
+          in: query
+          description: The name of the field you wish to sort by
+          schema:
+            enum:
+              - email
+              - created_at
+              - phone_number
+              - last_auth
+            type: string
+        - name: sort_order
+          required: false
+          in: query
+          description: The order of the sort
+          schema:
+            enum:
+              - asc
+              - desc
+            type: string
+        - name: search
+          required: false
+          in: query
+          description: Search expression based on the [SCIM protocol](https://www.rfc-editor.org/rfc/rfc7644#section-3.4.2.2). For syntax and searchable fields, see [Search query syntax](/openapi/scim_search_syntax/)
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiGetAllUsers'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequestHttpError'
+      security:
+        - bearer: []
+  /v1/users/count:
+    get:
+      operationId: getUsersCount
+      summary: Get users count
+      description: 'Get the number of users saved in Transmit '
+      parameters:
+        - name: status
+          required: false
+          in: query
+          description: Status of the users to count
+          schema:
+            enum:
+              - Active
+              - Disabled
+              - Pending
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                title: ApiOkResponse-getUsersCount
+                type: object
+                required:
+                  - result
+                description: Number of users
+                properties:
+                  result:
+                    $ref: '#/components/schemas/ApiUsersCount'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequestHttpError'
+      security:
+        - bearer: []
+  /v1/users/email/{email}:
+    get:
+      operationId: getUserByEmail
+      summary: Get user by email
+      description: Search for a user by primary email
+      parameters:
+        - name: email
+          required: true
+          in: path
+          description: The user's primary email to search for
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                title: ApiOkResponse-getUserByEmail
+                type: object
+                required:
+                  - result
+                description: ''
+                properties:
+                  result:
+                    $ref: '#/components/schemas/ApiUser'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequestHttpError'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundHttpError'
+      security:
+        - bearer: []
+  /v1/users/me/password-credentials:
+    post:
+      operationId: addPasswordCredentialsToCurrentUser
+      summary: Register password
+      description: Allows a logged-in user to register their first password. Must be authorized using a valid user access token returned upon successful authentication.
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApiAddPassword'
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                title: ApiOkResponse-addPasswordCredentialsToCurrentUser
+                type: object
+                required:
+                  - result
+                description: Password registered
+                properties:
+                  result:
+                    $ref: '#/components/schemas/RegisterPasswordResponse'
+        '403':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenHttpError'
+      security:
+        - bearer: []
+  /v1/users/phone/{phone_number}:
+    get:
+      operationId: getUserByPhone
+      summary: Get user by phone number
+      description: Search for a user by their primary phone number
+      parameters:
+        - name: phone_number
+          required: true
+          in: path
+          description: The phone number of the user to get
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                title: ApiOkResponse-getUserByPhone
+                type: object
+                required:
+                  - result
+                description: The requested user result
+                properties:
+                  result:
+                    $ref: '#/components/schemas/ApiUser'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequestHttpError'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundHttpError'
+      security:
+        - bearer: []
+  /v1/users/username/{username}:
+    get:
+      operationId: getUserByUsername
+      summary: Get user by username
+      description: Search for a user by username
+      parameters:
+        - name: username
+          required: true
+          in: path
+          description: The user's username to search for
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                title: ApiOkResponse-getUserByUsername
+                type: object
+                required:
+                  - result
+                description: ''
+                properties:
+                  result:
+                    $ref: '#/components/schemas/ApiUser'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequestHttpError'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundHttpError'
+      security:
+        - bearer: []
+  /v1/users/{user_id}:
+    get:
+      operationId: getUserById
+      summary: Get user by ID
+      description: Search for a user by user ID
+      parameters:
+        - name: user_id
+          required: true
+          in: path
+          description: The user ID to search for
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                title: ApiOkResponse-getUserById
+                type: object
+                required:
+                  - result
+                description: ''
+                properties:
+                  result:
+                    $ref: '#/components/schemas/ApiUser'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequestHttpError'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundHttpError'
+      security:
+        - bearer: []
+    put:
+      operationId: updateUser
+      summary: Update user
+      description: Update a user's attributes
+      parameters:
+        - name: user_id
+          required: true
+          in: path
+          description: The ID of the user that should be updated
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApiUpdateUserInput'
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                title: ApiOkResponse-updateUser
+                type: object
+                required:
+                  - result
+                description: The user has been successfully updated.
+                properties:
+                  result:
+                    $ref: '#/components/schemas/ApiUser'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequestHttpError'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundHttpError'
+      security:
+        - bearer: []
+  /v1/users/{user_id}/apps:
+    delete:
+      operationId: removeUserFromApp
+      summary: Remove user from app
+      description: Remove a user from the requesting application
+      parameters:
+        - name: user_id
+          required: true
+          in: path
+          description: The ID of the user to remove from application
+          schema:
+            type: string
+      responses:
+        '204':
+          description: User removed
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequestHttpError'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundHttpError'
+      security:
+        - bearer: []
+  /v1/users/{user_id}/groups:
+    get:
+      operationId: getUserGroups
+      summary: Get user's groups
+      description: Retrieve a list of groups associated with a user
+      parameters:
+        - name: user_id
+          required: true
+          in: path
+          description: ID of the user to retrieve groups for
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                title: ApiOkResponse-getUserGroups
+                type: object
+                required:
+                  - result
+                description: ''
+                properties:
+                  result:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ApiGroup'
+        '400':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequestHttpError'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundHttpError'
+      security:
+        - bearer: []
+  /v1/users/{user_id}/password:
+    post:
+      operationId: addPasswordCredential
+      summary: Create credentials
+      description: Creates new password credentials for a user that doesn't already have a password. The password is temporary, and must be reset upon the user's first login.
+      parameters:
+        - name: user_id
+          required: true
+          in: path
+          description: The ID of the user
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApiAddPassword'
+      responses:
+        '201':
+          description: ''
+          content:
+            application/json:
+              schema:
+                title: ApiCreatedResponse-addPasswordCredential
+                type: object
+                required:
+                  - result
+                description: The password of the user has been successfully added.
+                properties:
+                  result:
+                    $ref: '#/components/schemas/RegisterPasswordResponse'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundHttpError'
+        '409':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConflictException'
+      security:
+        - bearer: []
+    put:
+      operationId: updatePasswordCredential
+      summary: Update password
+      description: Updates the user's existing credentials with a new temporary password, which must be reset the next time they login.
+      parameters:
+        - name: user_id
+          required: true
+          in: path
+          description: The ID of the user
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApiAddPassword'
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                title: ApiOkResponse-updatePasswordCredential
+                type: object
+                required:
+                  - result
+                description: The password of the user has been successfully added.
+                properties:
+                  result:
+                    $ref: '#/components/schemas/RegisterPasswordResponse'
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundHttpError'
+        '409':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConflictException'
+      security:
+        - bearer: []
+  /v1/manage/users/{user_id}:
+    delete:
+      operationId: deleteTenantUser
+      summary: Delete user
+      description: Delete a user and all their data (tenant-level and app-level). Requires an admin access token (from a management app).
+      parameters:
+        - name: user_id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        '204':
+          description: User deleted
+        '404':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundHttpError'
+      security:
+        - bearer: []
+components:
+  schemas:
+    BadRequestHttpError:
+      type: object
+      properties:
+        message:
+          example: Bad request
+          type: array
+          items:
+            type: string
+        error_code:
+          type: number
+          example: 400
+      required:
+        - message
+        - error_code
+    ApiUsersCount:
+      type: object
+      properties:
+        user_count:
+          type: number
+          description: Number of users
+      required:
+        - user_count
+    ApiGetAllUsers:
+      type: object
+      properties:
+        total_count:
+          type: number
+        page_info:
+          $ref: '#/components/schemas/PageInfo'
+        result:
+          type: array
+          items:
+            $ref: '#/components/schemas/ApiUser'
+      required:
+        - total_count
+        - page_info
+        - result
+    ApiCreateUserInput:
+      type: object
+      properties:
+        email:
+          type: string
+          description: Primary email address of the user
+        phone_number:
+          type: string
+          description: Primary phone number of the user, specified in E.164 format
+        secondary_emails:
+          description: Secondary email addresses to add to user's current emails
+          type: array
+          items:
+            type: string
+        secondary_phone_numbers:
+          description: Secondary phone numbers to add to user's phone numbers, each specified in E.164 format
+          type: array
+          items:
+            type: string
+        birthday:
+          format: date-time
+          type: string
+          description: User's birthday
+        address:
+          description: User's address
+          allOf:
+            - $ref: '#/components/schemas/ApiCreateOrUpdateAddress'
+        name:
+          description: Object describing user's full name
+          allOf:
+            - $ref: '#/components/schemas/ApiUserName'
+        external_account_id:
+          type: string
+          description: User identifier in an app, set by the app
+        custom_app_data:
+          type: object
+          description: Custom data object for app-related user info
+        picture:
+          type: string
+          description: The picture of user, specified as a URL
+        language:
+          type: string
+          description: The language of the user, as provided by the browser using the [Accept-Language](https://www.rfc-editor.org/rfc/rfc7231#section-5.3.5) header field
+        custom_data:
+          type: object
+          description: Custom data object for tenant user info
+        external_user_id:
+          type: string
+          description: A unique identifier in a tenant
+        username:
+          type: string
+          description: Username used to identify the user for password login (unless a primary email will be used instead). Assigning a username requires setting a password for the user.
+        credentials:
+          description: ' The password of the user, who is identified by either a username or primary email. Required if username is set for the user.'
+          allOf:
+            - $ref: '#/components/schemas/ApiCreateUserPassword'
+    IdentifierIsTakenHttpError:
+      type: object
+      properties:
+        message:
+          type: string
+        error_code:
+          type: number
+      required:
+        - message
+        - error_code
+    ApiUser:
+      type: object
+      properties:
+        email:
+          description: Primary email address, used as user identifier
+          allOf:
+            - $ref: '#/components/schemas/ApiUserEmail'
+        secondary_emails:
+          type: array
+          items:
+            $ref: '#/components/schemas/ApiUserEmail'
+        phone_number:
+          description: Primary phone number, used as user identifier
+          allOf:
+            - $ref: '#/components/schemas/ApiUserPhone'
+        secondary_phone_numbers:
+          type: array
+          items:
+            $ref: '#/components/schemas/ApiUserPhone'
+        username:
+          type: string
+          description: Username used to identify the user for password login (unless a primary email will be used instead). Defined only if a password was set for the user.
+        user_id:
+          type: string
+          description: User ID autogenerated upon user creation
+        birthday:
+          format: date-time
+          type: string
+          description: Birthday as YYYY-MM-DD
+        address:
+          description: User's address
+          allOf:
+            - $ref: '#/components/schemas/ApiAddress'
+        name:
+          description: Full name
+          allOf:
+            - $ref: '#/components/schemas/ApiUserName'
+        status:
+          $ref: '#/components/schemas/Status'
+        created_at:
+          type: number
+          description: Date user was created in the tenant
+        updated_at:
+          type: number
+          description: Date user was last updated
+        identity_providers:
+          type: array
+          items:
+            $ref: '#/components/schemas/ApiUserIdentityProvider'
+        last_auth:
+          format: date-time
+          type: string
+          description: Date user last authenticated
+        external_account_id:
+          type: string
+          description: User identifier in an app, set by the app
+        app_name:
+          type: string
+          description: Name of the app the user is associated with
+        custom_app_data:
+          type: object
+          description: Custom data object for app-related user info
+        groupIds:
+          description: List of group IDs the user is assigned to
+          type: array
+          items:
+            type: string
+        picture:
+          type: string
+          description: The picture of user, specified as a URL
+        language:
+          type: string
+          description: The language of the user, as provided by the browser using the [Accept-Language](https://www.rfc-editor.org/rfc/rfc7231#section-5.3.5) header field
+        custom_data:
+          type: object
+          description: Custom data object for tenant user info
+        external_user_id:
+          type: string
+          description: A unique identifier in a tenant
+      required:
+        - user_id
+        - status
+        - created_at
+        - updated_at
+    NotFoundHttpError:
+      type: object
+      properties:
+        message:
+          type: string
+        error_code:
+          type: number
+          example: 404
+      required:
+        - message
+        - error_code
+    ApiUpdateUserInput:
+      type: object
+      properties:
+        secondary_emails:
+          description: Secondary email addresses to add to user's current emails
+          type: array
+          items:
+            type: string
+        secondary_phone_numbers:
+          description: Secondary phone numbers to add to user's phone numbers, each specified in E.164 format
+          type: array
+          items:
+            type: string
+        birthday:
+          format: date-time
+          type: string
+          description: User's birthday
+        address:
+          description: User's address
+          allOf:
+            - $ref: '#/components/schemas/ApiCreateOrUpdateAddress'
+        name:
+          description: Object describing user's full name
+          allOf:
+            - $ref: '#/components/schemas/ApiUserName'
+        status:
+          type: string
+          description: Status of user
+          enum:
+            - Active
+            - Disabled
+            - Pending
+        external_account_id:
+          type: string
+          description: User identifier in an app, set by the app
+        custom_app_data:
+          type: object
+          description: Custom data object for app-related user info
+        picture:
+          type: string
+          description: The picture of user, specified as a URL
+        language:
+          type: string
+          description: The language of the user, as provided by the browser using the [Accept-Language](https://www.rfc-editor.org/rfc/rfc7231#section-5.3.5) header field
+        custom_data:
+          type: object
+          description: Custom data object for tenant user info
+        external_user_id:
+          type: string
+          description: A unique identifier in a tenant
+        username:
+          type: string
+          description: Username used to identify the user for password login (unless a primary email will be used instead). Can only be updated if there’s a password set for this user.
+    ApiGroup:
+      type: object
+      properties:
+        group_id:
+          type: string
+          description: Group ID
+        name:
+          type: string
+          description: Group name
+        description:
+          type: string
+          description: Group description
+        created_at:
+          type: number
+          description: Date group was created in the tenant
+        updated_at:
+          type: number
+          description: Date group was last updated
+        custom_data:
+          type: object
+          description: Group custom data object
+      required:
+        - group_id
+        - name
+        - created_at
+        - updated_at
+    ApiAddPassword:
+      type: object
+      properties:
+        password:
+          type: string
+          description: The user's new password
+        username:
+          type: string
+          description: The user's new username. This will be the identifier the user will use to authenticate. If username is not provided and the user has verified their email, that email address will be used as the username.
+      required:
+        - password
+    ConflictException:
+      type: object
+      properties: {}
+    RegisterPasswordResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          readOnly: true
+          example: Password registered
+      required:
+        - message
+    ApiBulkUsers:
+      type: object
+      properties:
+        total_users:
+          type: number
+          description: Total number of users requested to be created
+        created_user_ids:
+          description: List of user IDs of the users that were successfully created
+          type: array
+          items:
+            type: string
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserError'
+      required:
+        - total_users
+        - created_user_ids
+        - errors
+    ForbiddenHttpError:
+      type: object
+      properties:
+        message:
+          type: string
+        error_code:
+          type: number
+          example: 403
+      required:
+        - message
+        - error_code
+    PageInfo:
+      type: object
+      properties:
+        has_next_page:
+          type: boolean
+        has_previous_page:
+          type: boolean
+      required:
+        - has_next_page
+        - has_previous_page
+    Status:
+      type: string
+      enum:
+        - Active
+        - Disabled
+        - Pending
+    ApiUserEmail:
+      type: object
+      properties:
+        value:
+          type: string
+          description: Email address
+        email_verified:
+          type: boolean
+          description: Indicates if email was verified (via magic link, social login, or email verification flows)
+        verified_at:
+          format: date-time
+          type: string
+          description: Last verification date of the email
+      required:
+        - value
+    ApiUserPhone:
+      type: object
+      properties:
+        value:
+          type: string
+          description: Phone number
+        phone_number_verified:
+          type: boolean
+          description: Indicates if phone number was verified (via SMS OTP or verification flow)
+        verified_at:
+          format: date-time
+          type: string
+          description: Last verification date of the phone number
+      required:
+        - value
+    ApiUserIdentityProvider:
+      type: object
+      properties:
+        source:
+          type: string
+          description: Type of identity provider
+          enum:
+            - UserID
+            - BindID
+            - Google
+            - Apple
+            - Facebook
+            - Line
+            - Transmit Identity
+            - BindIDApi
+        identifier:
+          type: string
+          description: Identifier of the user in the provider's system
+        email:
+          type: string
+          description: Email used by the user to authenticate to this provider
+        first_auth_date:
+          format: date-time
+          type: string
+          description: Date user first authenticated to this provider
+        last_auth_date:
+          format: date-time
+          type: string
+          description: Date user last authenticated to this provider
+      required:
+        - source
+        - identifier
+        - email
+        - first_auth_date
+        - last_auth_date
+    UserError:
+      type: object
+      properties:
+        errors:
+          type: array
+          items:
+            type: string
+        user_identifier:
+          type: string
+      required:
+        - errors
+        - user_identifier
+    ApiCreateOrUpdateAddress:
+      type: object
+      properties:
+        country:
+          type: string
+          description: Country
+        state:
+          type: string
+          description: State
+        city:
+          type: string
+          description: City
+        street_address:
+          type: string
+          description: Street address
+        postal_code:
+          type: string
+          description: Postal code
+        type:
+          type: string
+          description: Type of address
+          enum:
+            - Home
+            - Work
+            - Other
+    ApiUserName:
+      type: object
+      properties:
+        title:
+          type: string
+          description: Title
+        first_name:
+          type: string
+          description: User's first name
+        last_name:
+          type: string
+          description: User's last name
+        middle_name:
+          type: string
+          description: User's middle name
+    ApiCreateUserPassword:
+      type: object
+      properties:
+        password:
+          type: string
+          description: The user's new temporary password
+      required:
+        - password
+    ApiAddress:
+      type: object
+      properties:
+        country:
+          type: string
+          description: Country
+        state:
+          type: string
+          description: State
+        city:
+          type: string
+          description: City
+        street_address:
+          type: string
+          description: Street address
+        postal_code:
+          type: string
+          description: Postal code
+        type:
+          type: string
+          description: Type of address
+          enum:
+            - Home
+            - Work
+            - Other
+        updated_at:
+          type: number
+          description: Date user's address was last updated
+  securitySchemes:
+    bearer:
+      scheme: bearer
+      bearerFormat: JWT
+      type: http
